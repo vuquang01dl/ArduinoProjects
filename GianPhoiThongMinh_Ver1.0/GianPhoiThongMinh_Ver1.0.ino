@@ -1,14 +1,12 @@
 #include <AFMotor.h>
-AF_DCMotor motor (1, MOTOR12_1KHZ); //create motor #1 using M1 output on Motor Drive Shield, set to 1kHz PWM frequency
+AF_DCMotor motor(4, MOTOR12_64KHZ); //create motor #1 using M1 output on Motor Drive Shield, set to 64kHz PWM frequency
 
-const int rainSensor = 3;
-const int lightSensor = 4;
-const int buttonIn = 5;
-const int buttonOut = 6;
-const int trigIn = A0;
-const int echoIn = A1;
-const int trigOut = A3;
-const int echoOut = A4;
+const int rainSensor = A0 ;
+const int lightSensor = A1;
+const int trigIn = A2;
+const int echoIn = A3;
+const int trigOut = A4;
+const int echoOut = A5;
 
 int distanceIn(int trig, int echo){
   unsigned long duration; // biến đo thời gian
@@ -58,44 +56,33 @@ bool checkRain(int rainSensor){
   return digitalRead(rainSensor);
 }
 
-bool checkButtonIn(int buttonIn){
-  return digitalRead(buttonIn);
-}
-
-bool checkButtonOut(int buttonOut){
-  return digitalRead(buttonOut);
-}
-
 void keoRa(){
+  motor.setSpeed(255);
   while(distanceOut(trigOut, echoOut)>20){
     motor.run(FORWARD);
-    motor.setSpeed(255);
   }
   motor.run(RELEASE);
+  delay(3000);
 }
 
 void keoVao(){
+  motor.setSpeed(255);
   while(distanceIn(trigIn, echoIn)>20){
     motor.run(BACKWARD);
-    motor.setSpeed(255);
   }
   motor.run(RELEASE);
-}
-
-void DungLai(){
-  motor.run(RELEASE);
+  delay(3000);
 }
 
 void setup(){
-  pinMode(lightSensor, INPUT_PULLUP);
+  pinMode(lightSensor, INPUT);
   pinMode(rainSensor, INPUT);
-  pinMode(buttonIn, INPUT);
-  pinMode(buttonOut, INPUT);
   pinMode(trigIn, OUTPUT);
   pinMode(echoIn, INPUT);
   pinMode(trigOut, OUTPUT);
   pinMode(echoOut, INPUT);
 
+  motor.setSpeed(255);
   keoVao();
 }
 void loop(){
@@ -103,11 +90,5 @@ void loop(){
     keoRa();
   } else {
     keoVao();
-  }
-  if(checkButtonIn(buttonIn)==1){
-    keoVao();
-  }
-  if(checkButtonOut(buttonOut)==1){
-    keoRa();
   }
 }
