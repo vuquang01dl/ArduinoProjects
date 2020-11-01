@@ -3,10 +3,7 @@
 LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x3F, 16, 2);
 #include <SPI.h>
 #include <MFRC522.h> // thu vien "RFID".
-#include <SD.h>
-#include <TMRpcm.h>
 #include <Servo.h>
-TMRpcm tmrpcm;
 Servo servo;
 /*
   Ket noi voi Arduino Uno hoac Mega
@@ -23,14 +20,11 @@ Servo servo;
 
 */
 
-#define SS_PIN 10
-#define RST_PIN 9
-#define SD_ChipSelectPin 4
+#define SS_PIN 53
+#define RST_PIN 5
 
-int trigPin1 = A0;
-int echoPin1 = A1;
-int trigPin2 = A2;
-int echoPin2 = A3;
+int trigPin = A2;
+int echoPin = A3;
 int servoPin = 2;
 int button = 5;
 
@@ -44,17 +38,15 @@ bool hopLe = false;
 String S = "";
 unsigned long ID = 0;
 
-long duration1, dist1, average1;
-long aver1[3];
-long duration2, dist2, average2;
-long aver2[3];
+long duration, dist, average;
+long aver[3];
 
 void moCua() {
   for (int i = 0; i <= 100; i++) {
     servo.write(i);
     delay(20);
   }
-  statusDoor = true;
+  statusDoor = false;
 }
 void dongCua() {
   for (int i = 100; i >= 0; i--) {
@@ -122,69 +114,51 @@ void kiemTraSoLuong(String S) {
     S = "";
   }
 }
-void measure1() {
-  digitalWrite(trigPin1, LOW);
+void measure() {
+  digitalWrite(trigPin, LOW);
   delayMicroseconds(5);
-  digitalWrite(trigPin1, HIGH);
+  digitalWrite(trigPin, HIGH);
   delayMicroseconds(15);
-  digitalWrite(trigPin1, LOW);
-  duration1 = pulseIn(echoPin1, HIGH);
-  dist1 = (duration1 / 2) / 29.1;
+  digitalWrite(trigPin, LOW);
+  duration = pulseIn(echoPin, HIGH);
+  dist = (duration / 2) / 29.1;
 }
-void measure2() {
-  digitalWrite(trigPin2, LOW);
-  delayMicroseconds(5);
-  digitalWrite(trigPin2, HIGH);
-  delayMicroseconds(15);
-  digitalWrite(trigPin2, LOW);
-  duration2 = pulseIn(echoPin2, HIGH);
-  dist2 = (duration2 / 2) / 29.1;
-}
-long distance1() {
+long distance() {
   for (int i = 0; i <= 2; i++) {
-    measure1();
-    aver1[i] = dist1;
+    measure();
+    aver[i] = dist;
     delay(50);
   }
-  average1 = (aver1[0] + aver1[1] + aver1[2]) / 3;
-  return average1;
-}
-long distance2() {
-  for (int i = 0; i <= 2; i++) {
-    measure2();
-    aver2[i] = dist2;
-    delay(50);
-  }
-  average2 = (aver2[0] + aver2[1] + aver2[2]) / 3;
-  return average2;
+  average = (aver[0] + aver[1] + aver[2]) / 3;
+  return average;
 }
 
 void setup() {
-  pinMode(trigPin1, OUTPUT);
-  pinMode(echoPin1, INPUT);
-  pinMode(trigPin2, OUTPUT);
-  pinMode(echoPin2, INPUT);
-
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  
   pinMode(button, INPUT);
 
-  servo.attach(servoPin);
   SPI.begin();
   mfrc522.PCD_Init();
   lcd.init();
   lcd.backlight();
   lcd.clear();
   demHS = 0;
-  dongCua();
+  servo.attach(servoPin);
+  servo.write(0);
+  statusDoor = true;
 }
+  
 
 void loop() {
   if (statusDoor == true) {
     if (docButton == true) {
       moCua();
     }
-    if (distance2() < 15) {
+    if (distance() < 15) {
       moCua();
-      delay(4000);
+      delay(3000);
       dongCua();
     }
     checkIDstudents();
@@ -196,9 +170,8 @@ void loop() {
       lcd.print("So luong HS: ");
       lcd.setCursor(13, 1);
       lcd.print(demHS);
-      delay(1000);
       moCua();
-      delay(4000);
+      delay(3000);
       dongCua();
       hopLe = false;
     } else {
