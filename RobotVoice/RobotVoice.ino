@@ -1,11 +1,3 @@
-/*
-  -----------------------------------------
-  Mert Arduino Tutorial and Projects
-  Subscribe for more videos and projects
-  Thanks all subscribers ;)
-  ----------------------------------------
-*/
-
 #include <Servo.h>   //Servo library. This is standard library. (Sketch -> Include Library -> Servo)
 String voice;
 
@@ -16,6 +8,8 @@ String voice;
 #define BACKWARD 'B'
 
 Servo myServo; //define servo name
+int ServoPin = 10;
+
 int LED1 = A0; //define LED 1 pin
 int LED2 = A1; //define LED 2 pin
 int buzzerPin = A2; //define buzzer pin
@@ -27,6 +21,32 @@ int IN2 = 3;
 int speedLeft = 7;
 int IN3 = 4;
 int IN4 = 5;
+//Distance Sensor]
+int trigPin = A3;
+int echoPin = A4;
+//
+long duration, dist, average;
+long aver[3];
+//
+void measure() {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(5);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(15);
+  digitalWrite(trigPin, LOW);
+  duration = pulseIn(echoPin, HIGH);
+  dist = (duration / 2) / 29.1;
+}
+long distance() {
+  for (int i = 0; i <= 2; i++) {
+    measure();
+    aver[i] = dist;
+    delay(50);
+  }
+  average = (aver[0] + aver[1] + aver[2]) / 3;
+  return average;
+}
+
 void motorRun(int cmd) {
   switch (cmd) {
     case FORWARD:
@@ -44,7 +64,7 @@ void motorRun(int cmd) {
       digitalWrite(IN3, LOW);
       digitalWrite(IN4, HIGH);
       //Tuỳ chỉnh tốc độ tiến
-      analogWrite(speedLeft,200);
+      analogWrite(speedLeft, 200);
       analogWrite(speedRight, 200);
       break;
     case STOP:
@@ -98,7 +118,7 @@ void buzzer_on ()
 void setup()
 {
   Serial.begin(9600); //start serial communication
-  myServo.attach(10); //define our servo pin (the motor shield servo1 input = digital pin 10)
+  myServo.attach(ServoPin); //define our servo pin (the motor shield servo1 input = digital pin 10)
   myServo.write(90);  //servo position is 90 degrees
   pinMode(LED1, OUTPUT); //A0 is output pin
   pinMode(LED2, OUTPUT); //A1 is output pin
@@ -109,6 +129,8 @@ void setup()
   pinMode(IN2, OUTPUT);
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
 }
 
 void loop()
@@ -123,8 +145,10 @@ void loop()
   }
   if (voice.length() > 0) {
     if (voice == "*Tiến") {
-      motorRun(FORWARD);
-      delay(20000);
+      myServo.write(90);
+      while (distance() > 10) {
+        motorRun(FORWARD);
+      }
       motorRun(STOP);
     }
     else if (voice == "*lùi") {
@@ -133,15 +157,22 @@ void loop()
       motorRun(STOP);
     }
     else if (voice == "*rẽ phải") {
-      motorRun(TURNRIGHT);
-      delay(1000);
-      motorRun(STOP);
-
+      myServo.write(0);
+      if (distance() > 10) {
+        motorRun(TURNRIGHT);
+        delay(1000);
+        motorRun(STOP);
+      }
+      myServo.write(90);
     }
     else if (voice == "*rẽ trái") {
-      motorRun(TURNLEFT);
-      delay(1000);
-      motorRun(STOP);
+      myServo.write(180);
+      if (distance() > 10) {
+        motorRun(TURNLEFT);
+        delay(1000);
+        motorRun(STOP);
+      }
+      myServo.write(90);
     }
     else if (voice == "*bật đèn") {
       LED_on();
