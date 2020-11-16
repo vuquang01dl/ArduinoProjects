@@ -20,8 +20,8 @@ Servo servo;
 
 */
 
-#define SS_PIN 53
-#define RST_PIN 5
+#define SS_PIN 10
+#define RST_PIN 9
 
 int trigPin = A2;
 int echoPin = A3;
@@ -94,7 +94,7 @@ void notFound() {
 void checkIDstudents() {
   ID = readID();
   switch (ID) {
-    case 581646388: S = "  Tran Hai Nam  "; kiemTraSoLuong(S);  break;
+    case 3408792335: S = " Pham Ngoc Hai  "; kiemTraSoLuong(S);  break;
     case 1981842473: S = " Tran Minh Hieu  "; kiemTraSoLuong(S); break;
     default: S = ""; hopLe = false; break;
   }
@@ -136,7 +136,7 @@ long distance() {
 void setup() {
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
-  
+
   pinMode(button, INPUT);
 
   SPI.begin();
@@ -149,7 +149,7 @@ void setup() {
   servo.write(0);
   statusDoor = true;
 }
-  
+
 
 void loop() {
   if (statusDoor == true) {
